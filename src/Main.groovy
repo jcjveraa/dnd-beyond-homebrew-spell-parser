@@ -1,25 +1,33 @@
 import groovy.json.JsonParserType
 import groovy.json.JsonSlurper
 
+
 static void main(String[] args) {
 //    def json = "https://character-service.dndbeyond.com/character/v5/character/115168153?includeCustomItems=true".toURL().text
     def json = readFileString("rudolf.json")
     def parser = new JsonSlurper().setType(JsonParserType.LAX)
     def jsonResp = parser.parseText(json)
-    def spells = jsonResp.data.classSpells[0].spells as List
+    def spells = jsonResp.data.classSpells[0].spells as ArrayList
+
+    spells.sort(Comparator.comparingInt(spell -> spell.definition.level).thenComparing(spell -> spell.definition.name))
+    def lastLevel = -1
 
     spells.forEach { spell ->
         def d = spell.definition
         def name = """#### $d.name"""
         def level = parseLevel(d)
 
-       def rangeProp = formatPropHB("Range", rangeParser(d.range))
+        def rangeProp = formatPropHB("Range", rangeParser(d.range))
 
 
         def castingTimeProp = formatPropHB("Casting Time", castingTimeParser(d.activation))
         def durationProp = formatPropHB("Duration", durationParser(d.duration))
         def componentsProp = formatPropHB("Components", componentsParser(d))
 
+        if (d.level > lastLevel) {
+            println d.level == 0 ? "## Cantrips" : """"## Level $d.level"""
+            lastLevel = d.level
+        }
         println name
         println level
         println castingTimeProp
@@ -27,7 +35,7 @@ static void main(String[] args) {
         println durationProp
         println componentsProp
         println ""
-        println d.desciption
+        println d.description // already formatted
         println "" // skip a line
     }
 
@@ -45,7 +53,7 @@ static String castingTimeParser(activation) {
 
 static String durationParser(duration) {
     switch (duration.durationType) {
-        case "Instantaneous" ->  "Instantaneous"
+        case "Instantaneous" -> "Instantaneous"
         case "Time" -> """$duration.durationInterval $duration.durationUnit"""
         default -> throw new Exception()
     }
@@ -76,10 +84,10 @@ static String readFileString(String filePath) {
 
 static String componentsParser(d) {
     def result = ""
-    if(d.components.contains(1)) result += "S, "
-    if(d.components.contains(2)) result += "V, "
-    if(d.components.contains(3)) result += """M ($d.componentsDescription)"""
-    if(result.endsWith(", ")) result = result.substring(0, result.length()-2)
+    if (d.components.contains(1)) result += "S, "
+    if (d.components.contains(2)) result += "V, "
+    if (d.components.contains(3)) result += """M ($d.componentsDescription)"""
+    if (result.endsWith(", ")) result = result.substring(0, result.length() - 2)
     return result
 }
 
@@ -92,7 +100,7 @@ static String rangeParser(range) {
         rangeProp = range.origin
     }
 
-    if(range.aoeType != null) {
+    if (range.aoeType != null) {
         rangeProp + """ ($range.aoeValue ft $range.aoeType)"""
     } else rangeProp
 }
