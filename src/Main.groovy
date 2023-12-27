@@ -12,6 +12,8 @@ static void main(String[] args) {
     spells.sort(Comparator.comparingInt(spell -> spell.definition.level).thenComparing(spell -> spell.definition.name))
     def lastLevel = -1
 
+    println """# $jsonResp.data.name's spell list"""
+
     spells.forEach { spell ->
         def d = spell.definition
         def name = """#### $d.name"""
@@ -25,7 +27,8 @@ static void main(String[] args) {
         def componentsProp = formatPropHB("Components", componentsParser(d))
 
         if (d.level > lastLevel) {
-            println d.level == 0 ? "## Cantrips" : """"## Level $d.level"""
+            def header = d.level == 0 ? "## Cantrips" : """## Level $d.level"""
+            println header
             lastLevel = d.level
         }
         println name
