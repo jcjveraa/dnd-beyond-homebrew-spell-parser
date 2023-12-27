@@ -7,12 +7,19 @@ static void main(String[] args) {
     def json = readFileString("rudolf.json")
     def parser = new JsonSlurper().setType(JsonParserType.LAX)
     def jsonResp = parser.parseText(json)
-    def spells = jsonResp.data.classSpells[0].spells as ArrayList
-
-    spells.sort(Comparator.comparingInt(spell -> spell.definition.level).thenComparing(spell -> spell.definition.name))
-    def lastLevel = -1
 
     println """# $jsonResp.data.name's spell list"""
+
+    // this only prints the 'class spells' (?) of the first class now
+    printClassSpells(jsonResp)
+}
+
+private static void printClassSpells(jsonResp) {
+    def spells = jsonResp.data.classSpells[0].spells as ArrayList
+
+    // this works but gives a warning - works differently in Groovy vs java?
+    spells.sort(Comparator.comparingInt(spell -> spell.definition.level).thenComparing(spell -> spell.definition.name))
+    def lastLevel = -1
 
     spells.forEach { spell ->
         def d = spell.definition
@@ -41,8 +48,6 @@ static void main(String[] args) {
         println d.description // already formatted
         println "" // skip a line
     }
-
-
 }
 
 static String castingTimeParser(activation) {
